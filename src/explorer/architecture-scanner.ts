@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, ModuleRef, ModulesContainer } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { Module } from '@nestjs/core/injector/module';
 import { ArchitectureMap, ComponentNode, ModuleNode } from './explorer.types';
 
 const INTERNAL_NAMES = new Set([
@@ -18,7 +17,8 @@ const INTERNAL_NAMES = new Set([
   'metatype',
 ]);
 
-const INTERNAL_PATTERNS = /^(noop|useFactory|useClass|useValue|lazyModuleLoader)/;
+const INTERNAL_PATTERNS =
+  /^(noop|useFactory|useClass|useValue|lazyModuleLoader)/;
 
 @Injectable()
 export class ArchitectureScanner implements OnModuleInit {
@@ -85,11 +85,19 @@ export class ArchitectureScanner implements OnModuleInit {
     type: 'controller' | 'provider',
   ): ComponentNode {
     const metatype = wrapper.metatype!;
-    const paramTypes: Function[] =
-      Reflect.getMetadata('design:paramtypes', metatype) ?? [];
+    const paramTypes: Array<{ name: string }> =
+      (Reflect.getMetadata('design:paramtypes', metatype) as
+        | Array<{ name: string }>
+        | undefined) ?? [];
 
     const dependencies = paramTypes
-      .filter((dep): dep is Function => !!dep && typeof dep === 'function' && !!dep.name && dep.name !== 'Object')
+      .filter(
+        (dep) =>
+          !!dep &&
+          typeof dep === 'function' &&
+          !!dep.name &&
+          dep.name !== 'Object',
+      )
       .map((dep) => dep.name);
 
     return {
@@ -110,7 +118,9 @@ export class ArchitectureScanner implements OnModuleInit {
   }
 
   private buildModuleNodes(): ModuleNode[] {
-    const modulesContainer = this.moduleRef.get(ModulesContainer, { strict: false });
+    const modulesContainer = this.moduleRef.get(ModulesContainer, {
+      strict: false,
+    });
     const nodes: ModuleNode[] = [];
 
     const INTERNAL_MODULES = new Set(['InternalCoreModule']);

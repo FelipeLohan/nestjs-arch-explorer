@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Req, Res, Type } from '@nestjs/common';
+import { Controller, Get, Req, Res, Type } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { join } from 'path';
 import { normalize } from 'path';
@@ -6,7 +6,9 @@ import { normalize } from 'path';
 // Public dir relative to dist/explorer/dashboard.controller.js → dist/public/
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 
-export function createDashboardController(dashboardPath: string): Type<unknown> {
+export function createDashboardController(
+  dashboardPath: string,
+): Type<unknown> {
   @Controller(dashboardPath)
   class DashboardController {
     @Get()
