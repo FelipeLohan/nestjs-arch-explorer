@@ -132,11 +132,13 @@ export class ArchitectureScanner implements OnModuleInit {
 
       const controllers = [...mod.controllers.values()]
         .filter((w) => this.isUserDefined(w))
+        .filter((w) => w.host === mod)
         .map((w) => w.metatype!.name);
 
       const providers = [...mod.providers.values()]
         .filter((w) => this.isUserDefined(w))
         .filter((w) => !this.isModuleToken(w))
+        .filter((w) => w.host === mod)
         .map((w) => w.metatype!.name);
 
       nodes.push({ name: moduleName, controllers, providers });

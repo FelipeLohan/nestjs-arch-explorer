@@ -42,11 +42,14 @@ export function ArchGraph({ map, onSelect }: Props) {
             'font-family': "'Inter', system-ui, sans-serif",
             'text-valign': 'center',
             'text-halign': 'center',
-            'text-wrap': 'wrap',
-            'text-max-width': '90px',
-            width: (ele: NodeSingular) => ele.data('kind') === 'module' ? 110 : 90,
+            'text-wrap': 'none',
+            width: (ele: NodeSingular) => {
+              const label = (ele.data('label') as string) ?? '';
+              const min = ele.data('kind') === 'module' ? 110 : 90;
+              return Math.max(min, label.length * 6.5 + 24);
+            },
             height: (ele: NodeSingular) => ele.data('kind') === 'module' ? 40 : 32,
-            shape: (ele: NodeSingular) => ele.data('kind') === 'module' ? 'round-rectangle' : 'round-rectangle',
+            shape: 'round-rectangle',
           },
         },
         {
@@ -88,9 +91,12 @@ export function ArchGraph({ map, onSelect }: Props) {
       layout: {
         name: 'dagre',
         rankDir: 'TB',
-        nodeSep: 60,
-        rankSep: 80,
-        padding: 32,
+        nodeSep: 90,
+        edgeSep: 20,
+        rankSep: 120,
+        ranker: 'network-simplex',
+        padding: 48,
+        fit: true,
       } as cytoscape.LayoutOptions,
     });
 
