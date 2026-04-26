@@ -1,8 +1,8 @@
 import {
   Controller,
+  ForbiddenException,
   Get,
   Inject,
-  NotFoundException,
   Type,
 } from '@nestjs/common';
 import { ArchitectureScanner } from './architecture-scanner';
@@ -22,7 +22,7 @@ export function createExplorerController(apiPath: string): Type<unknown> {
     @Get()
     getExplorerData() {
       const guardFn = this.options.guardFn ?? (() => true);
-      if (!guardFn()) throw new NotFoundException();
+      if (!guardFn()) throw new ForbiddenException();
       return this.scanner.getArchitectureMap();
     }
   }

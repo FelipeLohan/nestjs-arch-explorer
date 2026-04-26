@@ -1,7 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, ModuleRef, ModulesContainer } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { ArchitectureMap, ComponentNode, ModuleNode, RouteInfo } from './explorer.types';
+import {
+  ArchitectureMap,
+  ComponentNode,
+  ModuleNode,
+  RouteInfo,
+} from './explorer.types';
 
 const INTERNAL_NAMES = new Set([
   'ModuleRef',
@@ -20,6 +25,8 @@ const INTERNAL_NAMES = new Set([
 const INTERNAL_PATTERNS =
   /^(noop|useFactory|useClass|useValue|lazyModuleLoader)/;
 
+const INTERNAL_MODULES = new Set(['InternalCoreModule']);
+
 @Injectable()
 export class ArchitectureScanner implements OnModuleInit {
   private architectureMap: ArchitectureMap = {
@@ -35,10 +42,6 @@ export class ArchitectureScanner implements OnModuleInit {
 
   onModuleInit(): void {
     this.architectureMap = this.scan();
-    console.log(
-      '[ArchitectureScanner] Architecture map:\n',
-      JSON.stringify(this.architectureMap, null, 2),
-    );
   }
 
   getArchitectureMap(): ArchitectureMap {
@@ -111,11 +114,21 @@ export class ArchitectureScanner implements OnModuleInit {
 
   private extractRoutes(metatype: NewableFunction): RouteInfo[] {
     const HTTP_METHOD: Record<number, string> = {
-      0: 'GET', 1: 'POST', 2: 'PUT', 3: 'DELETE', 4: 'PATCH',
-      5: 'ALL', 6: 'OPTIONS', 7: 'HEAD',
+      0: 'GET',
+      1: 'POST',
+      2: 'PUT',
+      3: 'DELETE',
+      4: 'PATCH',
+      5: 'ALL',
+      6: 'OPTIONS',
+      7: 'HEAD',
     };
 
-    const rawBase = Reflect.getMetadata('path', metatype) as string | string[] | undefined ?? '';
+    const rawBase =
+      (Reflect.getMetadata('path', metatype) as
+        | string
+        | string[]
+        | undefined) ?? '';
     const base = Array.isArray(rawBase) ? rawBase[0] : rawBase;
 
     const proto = metatype.prototype as Record<string, unknown>;
@@ -126,14 +139,24 @@ export class ArchitectureScanner implements OnModuleInit {
       const fn = proto[key];
       if (typeof fn !== 'function') continue;
 
-      const httpMethod = Reflect.getMetadata('method', fn) as number | undefined;
-      const rawPath = Reflect.getMetadata('path', fn) as string | string[] | undefined;
+      const httpMethod = Reflect.getMetadata('method', fn) as
+        | number
+        | undefined;
+      const rawPath = Reflect.getMetadata('path', fn) as
+        | string
+        | string[]
+        | undefined;
       if (httpMethod === undefined || rawPath === undefined) continue;
 
       const paths = Array.isArray(rawPath) ? rawPath : [rawPath];
       for (const p of paths) {
-        const full = `/${base}/${p}`.replace(/\/+/g, '/').replace(/(?!^)\/$/, '');
-        routes.push({ method: HTTP_METHOD[httpMethod] ?? 'UNKNOWN', path: full });
+        const full = `/${base}/${p}`
+          .replace(/\/+/g, '/')
+          .replace(/(?!^)\/$/, '');
+        routes.push({
+          method: HTTP_METHOD[httpMethod] ?? 'UNKNOWN',
+          path: full,
+        });
       }
     }
 
@@ -154,8 +177,6 @@ export class ArchitectureScanner implements OnModuleInit {
       strict: false,
     });
     const nodes: ModuleNode[] = [];
-
-    const INTERNAL_MODULES = new Set(['InternalCoreModule']);
 
     for (const [, mod] of modulesContainer) {
       const moduleName = mod.metatype?.name;
