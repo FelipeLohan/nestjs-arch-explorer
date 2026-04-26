@@ -1,0 +1,62 @@
+.arch-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1.5px solid var(--node-color);
+  background: color-mix(in srgb, var(--node-color) 11%, #09090b);
+  box-shadow: none;
+  color: #fafafa;
+  cursor: pointer;
+  user-select: none;
+  transition: box-shadow .15s;
+}
+
+.arch-node--module  { border-radius: 12px; }
+
+.arch-node--selected {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--node-color) 20%, #09090b);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-color) 25%, transparent);
+}
+
+.arch-node__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.arch-node__icon {
+  font-size: 11px;
+  line-height: 1;
+  flex-shrink: 0;
+  color: var(--node-color);
+}
+
+.arch-node--module .arch-node__icon { font-size: 13px; }
+
+.arch-node__label {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arch-node--module .arch-node__label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.arch-node__subline {
+  font-size: 9px;
+  color: color-mix(in srgb, var(--node-color) 70%, #a1a1aa);
+  font-family: monospace;
+  letter-spacing: .02em;
+}

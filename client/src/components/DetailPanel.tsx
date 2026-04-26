@@ -1,4 +1,6 @@
 import type { RouteInfo, SelectedNode } from '../types';
+import { KIND_ICON } from '../graph/constants';
+import './DetailPanel.css';
 
 const METHOD_COLOR: Record<string, string> = {
   GET:     '#10b981',
@@ -11,25 +13,19 @@ const METHOD_COLOR: Record<string, string> = {
   HEAD:    '#71717a',
 };
 
-interface Props {
-  selected: SelectedNode | null;
-}
-
 const SCOPE_LABEL: Record<string, string> = {
   DEFAULT:   'Singleton',
   TRANSIENT: 'Transient',
   REQUEST:   'Request',
 };
 
-const KIND_ICON: Record<string, string> = {
-  module:     '⬡',
-  controller: '→',
-  provider:   '◈',
-};
+interface Props {
+  selected: SelectedNode | null;
+}
 
 export function DetailPanel({ selected }: Props) {
   return (
-    <aside style={panel}>
+    <aside className="detail-panel">
       {!selected && <Placeholder />}
       {selected?.kind === 'module'    && <ModuleDetail data={selected.data} />}
       {selected?.kind === 'component' && <ComponentDetail data={selected.data} />}
@@ -39,9 +35,9 @@ export function DetailPanel({ selected }: Props) {
 
 function Placeholder() {
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-      <span style={{ fontSize: 24, opacity: .2 }}>◈</span>
-      <span style={{ fontSize: 12, color: 'var(--subtle)' }}>Selecione um nó</span>
+    <div className="detail-panel__placeholder">
+      <span className="detail-panel__placeholder-icon">◈</span>
+      <span className="detail-panel__placeholder-text">Selecione um nó</span>
     </div>
   );
 }
@@ -80,14 +76,16 @@ function ComponentDetail({ data }: { data: { name: string; type: string; scope: 
   );
 }
 
-function NodeHeader({ icon, name, typeLabel, typeColor, scopeLabel }: { icon: string; name: string; typeLabel: string; typeColor: string; scopeLabel?: string }) {
+function NodeHeader({ icon, name, typeLabel, typeColor, scopeLabel }: {
+  icon: string; name: string; typeLabel: string; typeColor: string; scopeLabel?: string;
+}) {
   return (
-    <div style={{ marginBottom: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ color: typeColor, fontSize: 16 }}>{icon}</span>
-        <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace', wordBreak: 'break-all', lineHeight: 1.4 }}>{name}</h2>
+    <div>
+      <div className="detail-panel__header-title-row">
+        <span className="detail-panel__header-icon" style={{ color: typeColor }}>{icon}</span>
+        <h2 className="detail-panel__header-name">{name}</h2>
       </div>
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div className="detail-panel__badge-row">
         <Badge label={typeLabel} color={typeColor} />
         {scopeLabel && <Badge label={scopeLabel} color="var(--subtle)" />}
       </div>
@@ -97,14 +95,14 @@ function NodeHeader({ icon, name, typeLabel, typeColor, scopeLabel }: { icon: st
 
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
-    <div style={{ marginTop: 4 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--subtle)' }}>{title}</span>
-        <span style={{ fontSize: 10, color: 'var(--subtle)', background: 'var(--surface2)', borderRadius: 10, padding: '1px 6px' }}>{count}</span>
+    <div className="detail-panel__section">
+      <div className="detail-panel__section-header">
+        <span className="detail-panel__section-title">{title}</span>
+        <span className="detail-panel__section-count">{count}</span>
       </div>
       {count === 0
-        ? <span style={{ fontSize: 12, color: 'var(--subtle)' }}>—</span>
-        : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{children}</div>}
+        ? <span className="detail-panel__empty">—</span>
+        : <div className="detail-panel__list">{children}</div>}
     </div>
   );
 }
@@ -112,43 +110,31 @@ function Section({ title, count, children }: { title: string; count: number; chi
 function RouteItem({ route }: { route: RouteInfo }) {
   const color = METHOD_COLOR[route.method] ?? '#71717a';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 8px', background: 'var(--surface2)', borderRadius: 6 }}>
-      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.04em', color, background: `color-mix(in srgb, ${color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>
+    <div className="detail-panel__route">
+      <span className="detail-panel__route-method" style={{ '--method-color': color } as React.CSSProperties}>
         {route.method}
       </span>
-      <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--muted)', wordBreak: 'break-all' }}>{route.path}</span>
+      <span className="detail-panel__route-path">{route.path}</span>
     </div>
   );
 }
 
 function Item({ label, color }: { label: string; color: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', background: 'var(--surface2)', borderRadius: 6, borderLeft: `2px solid ${color}` }}>
-      <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--muted)', wordBreak: 'break-all' }}>{label}</span>
+    <div className="detail-panel__item" style={{ '--item-color': color } as React.CSSProperties}>
+      <span className="detail-panel__item-label">{label}</span>
     </div>
   );
 }
 
 function Badge({ label, color }: { label: string; color: string }) {
   return (
-    <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'capitalize', color, background: `color-mix(in srgb, ${color} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, borderRadius: 20, padding: '2px 8px' }}>
+    <span className="detail-panel__badge" style={{ '--badge-color': color } as React.CSSProperties}>
       {label}
     </span>
   );
 }
 
 function Divider() {
-  return <div style={{ height: 1, background: 'var(--surface2)', margin: '16px 0' }} />;
+  return <div className="detail-panel__divider" />;
 }
-
-const panel: React.CSSProperties = {
-  width: 280,
-  minWidth: 280,
-  background: 'var(--surface)',
-  padding: '16px 14px',
-  overflowY: 'auto',
-  borderLeft: '1px solid var(--surface2)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-};
