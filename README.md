@@ -1,20 +1,23 @@
 # nestjs-arch-explorer
 
 [![npm version](https://img.shields.io/npm/v/nestjs-arch-explorer?color=6366f1&label=npm)](https://www.npmjs.com/package/nestjs-arch-explorer)
-[![CI](https://github.com/FelipeLohan/nestjs-arch-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/FelipeLohan/nestjs-arch-explorer/actions/workflows/ci.yml)
+[![CI](https://github.com/FelipeLohan/nestjs-architecture-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/FelipeLohan/nestjs-architecture-explorer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-10b981.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-FelipeLohan%2Fnestjs--architecture--explorer-24292e?logo=github)](https://github.com/FelipeLohan/nestjs-architecture-explorer)
 
 Plug-and-play NestJS library that inspects the Dependency Injection container **at runtime** and displays an interactive architecture graph dashboard — zero extra decorators required.
 
-> Add one import. Open `/architecture`. See your whole app.
+> Add one import. Open `/arch`. See your whole app.
 
 ---
 
 ## Features
 
 - Auto-discovers all **Modules**, **Controllers**, and **Providers** via `DiscoveryService`
-- Interactive graph rendered with [Cytoscape.js](https://js.cytoscape.org/) + dagre layout
-- Click any node to inspect its type, scope, and injected dependencies
+- Interactive graph rendered with [React Flow](https://reactflow.dev/) + dagre layout
+- **Hover any node** to highlight its relationships (Obsidian-style dim effect)
+- Click any node to inspect type, scope, injected dependencies, and HTTP endpoints
+- **Download diagram as PNG** with one click
 - Configurable route paths and custom security guard
 - One flag to disable in production: `enabled: false`
 - Zero decorators required in application code
@@ -44,7 +47,7 @@ import { ExplorerModule } from 'nestjs-arch-explorer';
 export class AppModule {}
 ```
 
-Start your app and open **`http://localhost:3000/architecture`**.
+Start your app and open **`http://localhost:3000/arch`**.
 
 ---
 
@@ -52,10 +55,10 @@ Start your app and open **`http://localhost:3000/architecture`**.
 
 ```typescript
 ExplorerModule.forRoot({
-  enabled?:      boolean;       // default: true
-  apiPath?:      string;        // default: 'explorer-data'
-  dashboardPath?: string;       // default: 'architecture'
-  guardFn?:      () => boolean; // optional security hook
+  enabled?:       boolean;       // default: true
+  apiPath?:       string;        // default: 'explorer-data'
+  dashboardPath?: string;        // default: 'arch'
+  guardFn?:       () => boolean; // optional security hook
 })
 ```
 
@@ -76,7 +79,7 @@ ExplorerModule.forRoot({
 | Method | Path (default)   | Description                             |
 |--------|------------------|-----------------------------------------|
 | `GET`  | `/explorer-data` | Returns full `ArchitectureMap` as JSON  |
-| `GET`  | `/architecture`  | Serves the interactive graph dashboard  |
+| `GET`  | `/arch`          | Serves the interactive graph dashboard  |
 
 ### `ArchitectureMap` shape
 
@@ -98,6 +101,12 @@ interface ComponentNode {
   type:         'controller' | 'provider';
   scope:        'DEFAULT' | 'TRANSIENT' | 'REQUEST';
   dependencies: string[];
+  routes?:      RouteInfo[];
+}
+
+interface RouteInfo {
+  method: string; // 'GET' | 'POST' | 'PUT' | ...
+  path:   string;
 }
 ```
 
@@ -110,16 +119,17 @@ On `onModuleInit`, `ArchitectureScanner` uses NestJS's built-in `DiscoveryServic
 1. Enumerate all registered modules, controllers, and providers
 2. Filter out NestJS framework internals
 3. Resolve constructor parameter types via `Reflect.getMetadata('design:paramtypes', ...)`
-4. Build an `ArchitectureMap` exposed at `/explorer-data`
+4. Extract HTTP routes via `Reflect.getMetadata('method' | 'path', ...)`
+5. Build an `ArchitectureMap` exposed at `/explorer-data`
 
-The dashboard at `/architecture` fetches that JSON and renders an interactive Cytoscape.js graph:
+The dashboard at `/arch` fetches that JSON and renders an interactive React Flow graph:
 
 | Node colour | Represents  |
 |-------------|-------------|
 | Indigo      | Module      |
 | Emerald     | Controller  |
 | Amber       | Provider    |
-| Orange dash | `injects` dependency edge |
+| Orange arrow | `injects` dependency edge |
 
 ---
 
@@ -130,12 +140,6 @@ The dashboard at `/architecture` fetches that JSON and renders an interactive Cy
 - `@nestjs/platform-express` ^10 or ^11
 - `reflect-metadata` ^0.1 or ^0.2
 - `rxjs` ^7
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, development workflow, and PR guidelines.
 
 ---
 

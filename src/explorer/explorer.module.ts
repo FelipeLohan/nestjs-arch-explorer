@@ -13,7 +13,7 @@ export class ExplorerModule {
   static forRoot(options: ExplorerModuleOptions = {}): DynamicModule {
     const enabled = options.enabled ?? true;
     const apiPath = options.apiPath ?? 'explorer-data';
-    const dashboardPath = options.dashboardPath ?? 'architecture';
+    const dashboardPath = options.dashboardPath ?? 'arch';
 
     const optionsProvider = {
       provide: EXPLORER_OPTIONS,
