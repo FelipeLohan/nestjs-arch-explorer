@@ -15,3 +15,38 @@ html, body, #root { height: 100%; overflow: hidden; }
   --provider:   #f59e0b;
   --inject:     #f97316;
 }
+
+/* React Flow controls — dark theme override */
+.react-flow__controls { box-shadow: none; }
+
+.react-flow__controls-button {
+  background: var(--surface);
+  border-color: var(--surface2);
+  fill: var(--muted);
+  color: var(--muted);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--surface2);
+  fill: var(--text);
+}
+
+/* Shared panel button (download, etc.) */
+.rf-panel-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.rf-panel-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}

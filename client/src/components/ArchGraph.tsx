@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   ReactFlow, Background, Controls, MiniMap, Panel,
   useNodesState, useEdgesState, BackgroundVariant,
@@ -26,6 +26,7 @@ interface Props {
 }
 
 export function ArchGraph({ map, onSelect }: Props) {
+  const graphRef = useRef<HTMLDivElement>(null);
   const { nodes: ln, edges: le } = useMemo(() => buildElements(map), [map]);
   const [nodes, , onNodesChange] = useNodesState(ln);
   const [edges, , onEdgesChange] = useEdgesState(le);
@@ -43,8 +44,20 @@ export function ArchGraph({ map, onSelect }: Props) {
     }
   }, [map, onSelect]);
 
+  const downloadPng = useCallback(() => {
+    if (!graphRef.current) return;
+    void import('html-to-image')
+      .then(({ toPng }) => toPng(graphRef.current!, { backgroundColor: '#09090b', pixelRatio: 2 }))
+      .then((dataUrl) => {
+        const a = document.createElement('a');
+        a.download = 'architecture.png';
+        a.href = dataUrl;
+        a.click();
+      });
+  }, []);
+
   return (
-    <div style={{ flex: 1, height: '100%' }}>
+    <div ref={graphRef} style={{ flex: 1, height: '100%' }}>
       <ReactFlow
         nodes={nodes} edges={edges}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
@@ -63,6 +76,7 @@ export function ArchGraph({ map, onSelect }: Props) {
           nodeColor={(n) => KIND_COLOR[n.data?.kind as string] ?? '#52525b'}
           nodeStrokeWidth={0} nodeBorderRadius={4} maskColor="rgba(9,9,11,0.75)"
           style={{ background: 'var(--surface)', border: '1px solid var(--surface2)', borderRadius: 8 }} />
+
         <Panel position="top-right" style={{
           display: 'flex', flexDirection: 'column', gap: 5,
           background: 'var(--surface)', border: '1px solid var(--surface2)',
@@ -78,6 +92,15 @@ export function ArchGraph({ map, onSelect }: Props) {
             <span style={{ width: 18, borderTop: '2px solid #f97316', flexShrink: 0 }} />
             injects
           </span>
+        </Panel>
+
+        <Panel position="bottom-center">
+          <button className="rf-panel-btn" onClick={downloadPng} title="Download diagram as PNG">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 1v7M3 6l3 3 3-3M1 11h10" />
+            </svg>
+            Download PNG
+          </button>
         </Panel>
       </ReactFlow>
     </div>
