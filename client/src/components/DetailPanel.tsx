@@ -79,7 +79,7 @@ function ComponentDetail({ data }: { data: { name: string; type: string; scope: 
       <Divider />
       {data.type === 'controller' && (
         <Section title="Endpoints" count={data.routes?.length ?? 0}>
-          {(data.routes ?? []).map((r) => <RouteItem key={`${r.method}:${r.path}`} route={r} />)}
+          <GroupedRoutes routes={data.routes ?? []} />
         </Section>
       )}
       {data.type === 'controller' && <Divider />}
@@ -134,15 +134,45 @@ function Section({ title, count, children }: { title: string; count: number; chi
   );
 }
 
-function RouteItem({ route }: { route: RouteInfo }) {
-  const color = METHOD_COLOR[route.method] ?? '#71717a';
+const METHOD_ORDER = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+function GroupedRoutes({ routes }: { routes: RouteInfo[] }) {
+  const groups = new Map<string, string[]>();
+  for (const r of routes) {
+    if (!groups.has(r.method)) groups.set(r.method, []);
+    groups.get(r.method)!.push(r.path);
+  }
+
+  const sorted = [...groups.entries()].sort(([a], [b]) => {
+    const ai = METHOD_ORDER.indexOf(a);
+    const bi = METHOD_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
   return (
-    <div className="detail-panel__route">
-      <span className="detail-panel__route-method" style={{ '--method-color': color } as React.CSSProperties}>
-        {route.method}
-      </span>
-      <span className="detail-panel__route-path">{route.path}</span>
-    </div>
+    <>
+      {sorted.map(([method, paths]) => {
+        const color = METHOD_COLOR[method] ?? '#71717a';
+        return (
+          <div key={method} className="detail-panel__route-group">
+            <div className="detail-panel__route-group-header">
+              <span className="detail-panel__route-method" style={{ '--method-color': color } as React.CSSProperties}>
+                {method}
+              </span>
+              <span className="detail-panel__route-group-count">{paths.length}</span>
+            </div>
+            <div className="detail-panel__route-group-paths">
+              {paths.map((path) => (
+                <div key={path} className="detail-panel__route-path-item" style={{ '--method-color': color } as React.CSSProperties}>
+                  {path}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 }
 

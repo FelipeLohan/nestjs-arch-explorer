@@ -167,15 +167,6 @@
   word-break: break-all;
 }
 
-.detail-panel__route {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 8px;
-  background: var(--surface2);
-  border-radius: 6px;
-}
-
 .detail-panel__route-method {
   font-size: 9px;
   font-weight: 700;
@@ -188,9 +179,40 @@
   border: 1px solid color-mix(in srgb, var(--method-color) 30%, transparent);
 }
 
-.detail-panel__route-path {
+.detail-panel__route-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-panel__route-group-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.detail-panel__route-group-count {
+  font-size: 10px;
+  color: var(--subtle);
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 1px 5px;
+}
+
+.detail-panel__route-group-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 10px;
+}
+
+.detail-panel__route-path-item {
   font-size: 11px;
   font-family: monospace;
   color: var(--muted);
+  padding: 3px 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  border-left: 2px solid color-mix(in srgb, var(--method-color) 40%, transparent);
   word-break: break-all;
 }
