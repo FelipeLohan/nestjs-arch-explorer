@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow, Background, MiniMap, Panel,
   useNodesState, useEdgesState, BackgroundVariant,
@@ -12,6 +12,7 @@ import { buildEdges } from '../graph/edge-builder';
 import { applyDagreLayout } from '../graph/layout';
 import { KIND_COLOR } from '../graph/constants';
 import { HoverContext } from '../graph/hover-context';
+import { buildDrawioXml } from '../graph/export-drawio';
 
 const nodeTypes = { archNode: ArchNode };
 
@@ -116,8 +117,21 @@ export function ArchGraph({ map, onSelect }: Props) {
     }
   }, [map, onSelect]);
 
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (!exportRef.current?.contains(e.target as Element)) setExportOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [exportOpen]);
+
   const downloadPng = useCallback(() => {
     if (!graphRef.current) return;
+    setExportOpen(false);
     void import('html-to-image')
       .then(({ toPng }) => toPng(graphRef.current!, { backgroundColor: '#09090b', pixelRatio: 2 }))
       .then((dataUrl) => {
@@ -127,6 +141,17 @@ export function ArchGraph({ map, onSelect }: Props) {
         a.click();
       });
   }, []);
+
+  const downloadDrawio = useCallback(() => {
+    setExportOpen(false);
+    const xml = buildDrawioXml(nodes, edges);
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const a = document.createElement('a');
+    a.download = 'architecture.drawio';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [nodes, edges]);
 
   /* ── render ───────────────────────────────────────────────── */
   return (
@@ -169,12 +194,35 @@ export function ArchGraph({ map, onSelect }: Props) {
           </Panel>
 
           <Panel position="bottom-center">
-            <button className="rf-panel-btn" onClick={downloadPng} title="Download diagram as PNG">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 1v7M3 6l3 3 3-3M1 11h10" />
-              </svg>
-              Download PNG
-            </button>
+            <div ref={exportRef} className="export-dropdown">
+              <button className="rf-panel-btn" onClick={() => setExportOpen((o) => !o)}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 1v7M3 6l3 3 3-3M1 11h10" />
+                </svg>
+                Export
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ marginLeft: 2, transform: exportOpen ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
+                  <path d="M1 2.5l3 3 3-3" />
+                </svg>
+              </button>
+              {exportOpen && (
+                <div className="export-menu">
+                  <button className="export-menu__item" onClick={downloadPng}>
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 1v7M3 6l3 3 3-3M1 11h10" />
+                    </svg>
+                    PNG
+                  </button>
+                  <button className="export-menu__item" onClick={downloadDrawio}>
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="1" width="10" height="10" rx="2" />
+                      <path d="M4 6h4M6 4v4" />
+                    </svg>
+                    Draw.io
+                  </button>
+                </div>
+              )}
+            </div>
           </Panel>
         </ReactFlow>
       </div>

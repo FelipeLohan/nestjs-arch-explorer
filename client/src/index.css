@@ -36,3 +36,40 @@ html, body, #root { height: 100%; overflow: hidden; }
   background: var(--surface2);
   color: var(--text);
 }
+
+/* Export dropdown */
+.export-dropdown { position: relative; }
+
+.export-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface2);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 130px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+
+.export-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s, color .12s;
+}
+
+.export-menu__item:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
