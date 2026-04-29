@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  ReactFlow, Background, Controls, MiniMap, Panel,
+  ReactFlow, Background, MiniMap, Panel,
   useNodesState, useEdgesState, BackgroundVariant,
   type Node, type Edge,
 } from '@xyflow/react';
@@ -146,8 +146,6 @@ export function ArchGraph({ map, onSelect }: Props) {
           proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
-          <Controls showInteractive={false}
-            style={{ background: 'var(--surface)', border: '1px solid var(--surface2)', borderRadius: 8 }} />
           <MiniMap
             nodeColor={(n) => KIND_COLOR[n.data?.kind as string] ?? '#52525b'}
             nodeStrokeWidth={0} nodeBorderRadius={4} maskColor="rgba(9,9,11,0.75)"

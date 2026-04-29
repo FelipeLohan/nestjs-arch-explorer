@@ -16,20 +16,6 @@ html, body, #root { height: 100%; overflow: hidden; }
   --inject:     #f97316;
 }
 
-/* React Flow controls — dark theme override */
-.react-flow__controls { box-shadow: none; }
-
-.react-flow__controls-button {
-  background: var(--surface);
-  border-color: var(--surface2);
-  fill: var(--muted);
-  color: var(--muted);
-}
-
-.react-flow__controls-button:hover {
-  background: var(--surface2);
-  fill: var(--text);
-}
 
 /* Shared panel button (download, etc.) */
 .rf-panel-btn {
