@@ -172,6 +172,7 @@ export function ArchGraph({ map, onSelect }: Props) {
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
           <MiniMap
+            zoomable pannable
             nodeColor={(n) => KIND_COLOR[n.data?.kind as string] ?? '#52525b'}
             nodeStrokeWidth={0} nodeBorderRadius={4} maskColor="rgba(9,9,11,0.75)"
             style={{ background: 'var(--surface)', border: '1px solid var(--surface2)', borderRadius: 8 }} />
