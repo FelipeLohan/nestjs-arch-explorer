@@ -72,10 +72,11 @@ function computeHighlightedIds(
 
 interface Props {
   map: ArchitectureMap;
+  search: string;
   onSelect: (node: SelectedNode | null) => void;
 }
 
-export function ArchGraph({ map, onSelect }: Props) {
+export function ArchGraph({ map, search, onSelect }: Props) {
   const graphRef = useRef<HTMLDivElement>(null);
   const { nodes: ln, edges: le } = useMemo(() => buildElements(map), [map]);
   const [nodes, , onNodesChange] = useNodesState(ln);
@@ -89,13 +90,20 @@ export function ArchGraph({ map, onSelect }: Props) {
     [hovered, edges],
   );
 
+  const searchIds = useMemo<Set<string> | null>(() => {
+    if (!search.trim()) return null;
+    const q = search.toLowerCase();
+    return new Set(nodes.map((n) => n.id).filter((id) => id.toLowerCase().includes(q)));
+  }, [search, nodes]);
+
   const displayEdges = useMemo(() => {
-    if (!hovered) return edges;
+    const activeIds = hovered ? highlightedIds : searchIds;
+    if (!activeIds) return edges;
     return edges.map((e) => {
-      const lit = highlightedIds.has(e.source) && highlightedIds.has(e.target);
+      const lit = activeIds.has(e.source) && activeIds.has(e.target);
       return { ...e, style: { ...e.style, opacity: lit ? 1 : 0.06 } };
     });
-  }, [hovered, highlightedIds, edges]);
+  }, [hovered, highlightedIds, searchIds, edges]);
 
   /* ── handlers ─────────────────────────────────────────────── */
   const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
@@ -155,7 +163,7 @@ export function ArchGraph({ map, onSelect }: Props) {
 
   /* ── render ───────────────────────────────────────────────── */
   return (
-    <HoverContext.Provider value={{ hoveredId: hovered?.id ?? null, highlightedIds }}>
+    <HoverContext.Provider value={{ hoveredId: hovered?.id ?? null, highlightedIds, searchIds }}>
       <div ref={graphRef} style={{ flex: 1, height: '100%' }}>
         <ReactFlow
           nodes={nodes} edges={displayEdges}

@@ -11,12 +11,16 @@ export function ArchNode({ id, data, selected }: NodeProps) {
   const w = nodeWidth(kind, label);
   const h = nodeHeight(kind);
 
-  const { hoveredId, highlightedIds } = useHoverState();
-  const hoverClass =
-    hoveredId === null      ? ''
-    : hoveredId === id      ? 'arch-node--hovered'
-    : highlightedIds.has(id) ? 'arch-node--neighbour'
-    :                          'arch-node--dimmed';
+  const { hoveredId, highlightedIds, searchIds } = useHoverState();
+
+  let hoverClass = '';
+  if (hoveredId !== null) {
+    hoverClass = hoveredId === id        ? 'arch-node--hovered'
+               : highlightedIds.has(id) ? 'arch-node--neighbour'
+               :                          'arch-node--dimmed';
+  } else if (searchIds !== null) {
+    hoverClass = searchIds.has(id) ? '' : 'arch-node--dimmed';
+  }
 
   const cls = [
     'arch-node',
