@@ -39,8 +39,8 @@ jobs:
       - name: Test
         run: npm test
 
-  publish-dry-run:
-    name: npm pack dry-run
+  publish:
+    name: Publish to npm
     runs-on: ubuntu-latest
     needs: ci
     if: github.ref == 'refs/heads/main'
@@ -51,9 +51,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: https://registry.npmjs.org
           cache: npm
 
       - run: npm ci
       - run: npm install --prefix client
       - run: npm run build:all
-      - run: npm pack --dry-run
+
+      - name: Check if version is already published
+        id: check
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view nestjs-arch-explorer@$PKG_VERSION version 2>/dev/null || true)
+          if [ "$PUBLISHED" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish
+        if: steps.check.outputs.skip == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
