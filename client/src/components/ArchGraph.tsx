@@ -7,16 +7,19 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { ArchitectureMap, SelectedNode } from '../types';
 import { ArchNode } from '../graph/ArchNode';
+import { GroupNode } from '../graph/GroupNode';
 import { buildNodes } from '../graph/node-builder';
 import { buildEdges } from '../graph/edge-builder';
 import { applyDagreLayout } from '../graph/layout';
+import { buildGroupedElements } from '../graph/grouped-builder';
 import { KIND_COLOR } from '../graph/constants';
 import { HoverContext } from '../graph/hover-context';
 import { buildDrawioXml } from '../graph/export-drawio';
 
-const nodeTypes = { archNode: ArchNode };
+const nodeTypes = { archNode: ArchNode, groupNode: GroupNode };
 
-function buildElements(map: ArchitectureMap) {
+function buildElements(map: ArchitectureMap, grouped: boolean) {
+  if (grouped) return buildGroupedElements(map);
   const { nodes: raw, seen } = buildNodes(map);
   const { edges } = buildEdges(map, seen);
   return { nodes: applyDagreLayout(raw, edges), edges };
@@ -78,7 +81,18 @@ interface Props {
 
 export function ArchGraph({ map, search, onSelect }: Props) {
   const graphRef = useRef<HTMLDivElement>(null);
-  const { nodes: ln, edges: le } = useMemo(() => buildElements(map), [map]);
+  const [grouped, setGrouped] = useState(false);
+  const [hiddenKinds, setHiddenKinds] = useState<Set<string>>(new Set());
+
+  const toggleKind = useCallback((kind: string) => {
+    setHiddenKinds((prev) => {
+      const next = new Set(prev);
+      next.has(kind) ? next.delete(kind) : next.add(kind);
+      return next;
+    });
+  }, []);
+
+  const { nodes: ln, edges: le } = useMemo(() => buildElements(map, grouped), [map, grouped]);
   const [nodes, , onNodesChange] = useNodesState(ln);
   const [edges, , onEdgesChange] = useEdgesState(le);
 
@@ -96,14 +110,26 @@ export function ArchGraph({ map, search, onSelect }: Props) {
     return new Set(nodes.map((n) => n.id).filter((id) => id.toLowerCase().includes(q)));
   }, [search, nodes]);
 
+  const hiddenNodeIds = useMemo(() => {
+    if (hiddenKinds.size === 0) return new Set<string>();
+    return new Set(nodes.filter((n) => hiddenKinds.has(n.data?.kind as string)).map((n) => n.id));
+  }, [nodes, hiddenKinds]);
+
+  const displayNodes = useMemo(() => {
+    if (hiddenKinds.size === 0) return nodes;
+    return nodes.map((n) => ({ ...n, hidden: hiddenKinds.has(n.data?.kind as string) }));
+  }, [nodes, hiddenKinds]);
+
   const displayEdges = useMemo(() => {
     const activeIds = hovered ? highlightedIds : searchIds;
-    if (!activeIds) return edges;
     return edges.map((e) => {
+      if (hiddenNodeIds.has(e.source) || hiddenNodeIds.has(e.target))
+        return { ...e, hidden: true };
+      if (!activeIds) return e;
       const lit = activeIds.has(e.source) && activeIds.has(e.target);
       return { ...e, style: { ...e.style, opacity: lit ? 1 : 0.06 } };
     });
-  }, [hovered, highlightedIds, searchIds, edges]);
+  }, [hovered, highlightedIds, searchIds, edges, hiddenNodeIds]);
 
   /* ── handlers ─────────────────────────────────────────────── */
   const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
@@ -189,7 +215,7 @@ export function ArchGraph({ map, search, onSelect }: Props) {
     <HoverContext.Provider value={{ hoveredId: hovered?.id ?? null, highlightedIds, searchIds }}>
       <div ref={graphRef} style={{ flex: 1, height: '100%' }}>
         <ReactFlow
-          nodes={nodes} edges={displayEdges}
+          nodes={displayNodes} edges={displayEdges}
           onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           onNodeMouseEnter={onNodeMouseEnter}
@@ -209,20 +235,46 @@ export function ArchGraph({ map, search, onSelect }: Props) {
             style={{ background: 'var(--surface)', border: '1px solid var(--surface2)', borderRadius: 8 }} />
 
           <Panel position="top-right" style={{
-            display: 'flex', flexDirection: 'column', gap: 5,
+            display: 'flex', flexDirection: 'column', gap: 4,
             background: 'var(--surface)', border: '1px solid var(--surface2)',
-            borderRadius: 8, padding: '8px 12px', fontSize: 10, color: 'var(--muted)',
+            borderRadius: 8, padding: '8px 12px', fontSize: 10,
           }}>
-            {Object.entries(KIND_COLOR).map(([kind, color]) => (
-              <span key={kind} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: color, opacity: .9, flexShrink: 0 }} />
-                {kind}
-              </span>
-            ))}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 2, paddingTop: 6, borderTop: '1px solid var(--surface2)' }}>
+            {Object.entries(KIND_COLOR).map(([kind, color]) => {
+              const hidden = hiddenKinds.has(kind);
+              return (
+                <button key={kind} onClick={() => toggleKind(kind)} style={{
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  color: hidden ? 'var(--subtle)' : 'var(--muted)',
+                  opacity: hidden ? 0.5 : 1, transition: 'opacity .15s, color .15s',
+                  textAlign: 'left',
+                }}>
+                  <span style={{
+                    width: 10, height: 10, borderRadius: 3, flexShrink: 0,
+                    background: hidden ? 'var(--subtle)' : color,
+                    transition: 'background .15s',
+                  }} />
+                  {kind}
+                </button>
+              );
+            })}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 2, paddingTop: 6, borderTop: '1px solid var(--surface2)', color: 'var(--muted)' }}>
               <span style={{ width: 18, borderTop: '2px solid #f97316', flexShrink: 0 }} />
               injects
             </span>
+            <button onClick={() => setGrouped((g) => !g)} style={{
+              marginTop: 4, paddingTop: 8, borderTop: '1px solid var(--surface2)',
+              background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 0',
+              color: grouped ? 'var(--module)' : 'var(--subtle)',
+              fontSize: 10, display: 'flex', alignItems: 'center', gap: 6,
+              transition: 'color .15s', textAlign: 'left',
+            }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <rect x="1" y="1" width="8" height="8" rx="2"/>
+                <path d="M1 4h8"/>
+              </svg>
+              {grouped ? 'Flat view' : 'Group by module'}
+            </button>
           </Panel>
 
           <Panel position="bottom-center">
