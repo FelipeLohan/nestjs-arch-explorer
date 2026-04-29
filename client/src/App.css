@@ -31,6 +31,50 @@
   gap: 6px;
 }
 
+.app-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 26px;
+  flex: 0 1 200px;
+  color: var(--subtle);
+  transition: border-color .15s;
+}
+
+.app-search:focus-within {
+  border-color: var(--module);
+  color: var(--muted);
+}
+
+.app-search__input {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+}
+
+.app-search__input::placeholder { color: var(--subtle); }
+
+.app-search__clear {
+  background: none;
+  border: none;
+  color: var(--subtle);
+  cursor: pointer;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.app-search__clear:hover { color: var(--text); }
+
 .app-stat-badge {
   display: flex;
   align-items: center;
