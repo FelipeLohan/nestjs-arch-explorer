@@ -161,6 +161,29 @@ export function ArchGraph({ map, search, onSelect }: Props) {
     URL.revokeObjectURL(a.href);
   }, [nodes, edges]);
 
+  const downloadSvg = useCallback(() => {
+    if (!graphRef.current) return;
+    setExportOpen(false);
+    void import('html-to-image')
+      .then(({ toSvg }) => toSvg(graphRef.current!, { backgroundColor: '#09090b' }))
+      .then((dataUrl) => {
+        const a = document.createElement('a');
+        a.download = 'architecture.svg';
+        a.href = dataUrl;
+        a.click();
+      });
+  }, []);
+
+  const downloadJson = useCallback(() => {
+    setExportOpen(false);
+    const blob = new Blob([JSON.stringify(map, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.download = 'architecture.json';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [map]);
+
   /* ── render ───────────────────────────────────────────────── */
   return (
     <HoverContext.Provider value={{ hoveredId: hovered?.id ?? null, highlightedIds, searchIds }}>
@@ -228,6 +251,18 @@ export function ArchGraph({ map, search, onSelect }: Props) {
                       <path d="M4 6h4M6 4v4" />
                     </svg>
                     Draw.io
+                  </button>
+                  <button className="export-menu__item" onClick={downloadSvg}>
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 9c1-2 2-3 3-3s2 2 3 2 2-2 4-4" />
+                    </svg>
+                    SVG
+                  </button>
+                  <button className="export-menu__item" onClick={downloadJson}>
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 2C2 2 1 3 1 4v1c0 1-1 1-1 1s1 0 1 1v1c0 1 1 2 2 2M9 2c1 0 2 1 2 2v1c0 1 1 1 1 1s-1 0-1 1v1c0 1-1 2-2 2" />
+                    </svg>
+                    JSON
                   </button>
                 </div>
               )}
