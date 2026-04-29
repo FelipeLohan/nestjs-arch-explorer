@@ -21,6 +21,7 @@ example/node_modules/
 .vscode/
 .idea/
 *.swp
+.claude
 
 # OS
 .DS_Store
