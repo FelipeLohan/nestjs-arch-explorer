@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { RouteInfo, SelectedNode } from '../types';
 import { KIND_ICON } from '../graph/constants';
 import './DetailPanel.css';
@@ -21,12 +22,25 @@ const SCOPE_LABEL: Record<string, string> = {
 
 interface Props {
   selected: SelectedNode | null;
+  pinned: boolean;
+  onPinToggle: () => void;
 }
 
-export function DetailPanel({ selected }: Props) {
+export function DetailPanel({ selected, pinned, onPinToggle }: Props) {
   return (
     <aside className="detail-panel">
       {!selected && <Placeholder />}
+      {selected && (
+        <button
+          className={`detail-panel__pin-btn${pinned ? ' detail-panel__pin-btn--active' : ''}`}
+          onClick={onPinToggle}
+          title={pinned ? 'Desafixar painel' : 'Fixar painel'}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 1l1 1-3 3-1-1 3-3zM7 5l-4 4M9 3L7 5M5 7l-3 3"/>
+          </svg>
+        </button>
+      )}
       {selected?.kind === 'module'    && <ModuleDetail data={selected.data} />}
       {selected?.kind === 'component' && <ComponentDetail data={selected.data} />}
     </aside>
@@ -79,11 +93,24 @@ function ComponentDetail({ data }: { data: { name: string; type: string; scope: 
 function NodeHeader({ icon, name, typeLabel, typeColor, scopeLabel }: {
   icon: string; name: string; typeLabel: string; typeColor: string; scopeLabel?: string;
 }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    void navigator.clipboard.writeText(name);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <div>
       <div className="detail-panel__header-title-row">
         <span className="detail-panel__header-icon" style={{ color: typeColor }}>{icon}</span>
         <h2 className="detail-panel__header-name">{name}</h2>
+        <button className="detail-panel__copy-btn" onClick={copy} title="Copiar nome">
+          {copied
+            ? <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="var(--controller)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6l3 3 5-5"/></svg>
+            : <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="1" width="7" height="8" rx="1"/><path d="M1 4v7a1 1 0 001 1h6"/></svg>
+          }
+        </button>
       </div>
       <div className="detail-panel__badge-row">
         <Badge label={typeLabel} color={typeColor} />
